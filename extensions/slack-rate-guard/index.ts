@@ -57,7 +57,8 @@ export default function register(api: OpenClawPluginApi) {
       const senderId = event.from;
       if (!senderId) return;
 
-      api.logger.info?.(`slack-rate-guard: message from ${senderId} on channel=${ctx.channelId}`);
+      // Only rate-limit Slack messages
+      if (ctx.channelId !== "slack") return;
 
       const result = consume(senderId);
 
