@@ -184,15 +184,27 @@ export async function dispatchReplyFromConfig(params: {
   const hookContext = deriveInboundMessageHookContext(ctx, { messageId: messageIdForHook });
   const { isGroup, groupId } = hookContext;
 
-  // Trigger plugin hooks (fire-and-forget)
+  // Trigger plugin hooks — may cancel the message (e.g. rate limiting)
   if (hookRunner?.hasHooks("message_received")) {
-    fireAndForgetHook(
-      hookRunner.runMessageReceived(
+    try {
+      const hookResult = await hookRunner.runMessageReceived(
         toPluginMessageReceivedEvent(hookContext),
         toPluginMessageContext(hookContext),
-      ),
-      "dispatch-from-config: message_received plugin hook failed",
-    );
+      );
+      if (hookResult?.cancel) {
+        logVerbose(
+          `dispatch-from-config: message_received hook cancelled message${hookResult.reply ? " (with reply)" : ""}`,
+        );
+        if (hookResult.reply) {
+          const payload = { text: hookResult.reply } satisfies ReplyPayload;
+          dispatcher.sendFinalReply(payload);
+        }
+        recordProcessed("skipped", { reason: "hook_cancelled" });
+        return { queuedFinal: false, counts: dispatcher.getQueuedCounts() };
+      }
+    } catch (err) {
+      logVerbose(`dispatch-from-config: message_received plugin hook failed: ${String(err)}`);
+    }
   }
 
   // Bridge to internal hooks (HOOK.md discovery system) - refs #8807

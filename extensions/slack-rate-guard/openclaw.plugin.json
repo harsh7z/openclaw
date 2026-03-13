@@ -1,0 +1,36 @@
+{
+  "id": "slack-rate-guard",
+  "name": "Slack Rate Guard",
+  "description": "Per-user rate limiting for Slack messages. Blocks messages before they reach the LLM to protect API spend.",
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "maxRequests": {
+        "type": "number",
+        "default": 10
+      },
+      "windowSeconds": {
+        "type": "number",
+        "default": 60
+      },
+      "cooldownMessage": {
+        "type": "string"
+      }
+    }
+  },
+  "uiHints": {
+    "maxRequests": {
+      "label": "Max Requests",
+      "help": "Maximum messages per user per window (default: 10)"
+    },
+    "windowSeconds": {
+      "label": "Window (seconds)",
+      "help": "Time window in seconds (default: 60)"
+    },
+    "cooldownMessage": {
+      "label": "Cooldown Message",
+      "help": "Custom message shown when rate limited (default: auto-generated with wait time)"
+    }
+  }
+}

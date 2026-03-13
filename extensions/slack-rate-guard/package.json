@@ -1,0 +1,12 @@
+{
+  "name": "@openclaw/slack-rate-guard",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Per-user rate limiting for Slack messages",
+  "type": "module",
+  "openclaw": {
+    "extensions": [
+      "./index.ts"
+    ]
+  }
+}

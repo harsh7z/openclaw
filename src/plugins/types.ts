@@ -673,6 +673,13 @@ export type PluginHookMessageReceivedEvent = {
   metadata?: Record<string, unknown>;
 };
 
+export type PluginHookMessageReceivedResult = {
+  /** Set to true to block this message from reaching the agent. */
+  cancel?: boolean;
+  /** Optional reply to send back to the sender when cancelled. */
+  reply?: string;
+};
+
 // message_sending hook
 export type PluginHookMessageSendingEvent = {
   to: string;
@@ -924,7 +931,7 @@ export type PluginHookHandlerMap = {
   message_received: (
     event: PluginHookMessageReceivedEvent,
     ctx: PluginHookMessageContext,
-  ) => Promise<void> | void;
+  ) => Promise<PluginHookMessageReceivedResult | void> | PluginHookMessageReceivedResult | void;
   message_sending: (
     event: PluginHookMessageSendingEvent,
     ctx: PluginHookMessageContext,

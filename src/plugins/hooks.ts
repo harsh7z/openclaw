@@ -29,6 +29,7 @@ import type {
   PluginHookGatewayStopEvent,
   PluginHookMessageContext,
   PluginHookMessageReceivedEvent,
+  PluginHookMessageReceivedResult,
   PluginHookMessageSendingEvent,
   PluginHookMessageSendingResult,
   PluginHookMessageSentEvent,
@@ -69,6 +70,7 @@ export type {
   PluginHookAfterCompactionEvent,
   PluginHookMessageContext,
   PluginHookMessageReceivedEvent,
+  PluginHookMessageReceivedResult,
   PluginHookMessageSendingEvent,
   PluginHookMessageSendingResult,
   PluginHookMessageSentEvent,
@@ -386,13 +388,23 @@ export function createHookRunner(registry: PluginRegistry, options: HookRunnerOp
 
   /**
    * Run message_received hook.
-   * Runs in parallel (fire-and-forget).
+   * Runs sequentially (highest priority first). Plugins can return
+   * { cancel: true, reply?: "..." } to block the message before
+   * it reaches the agent — useful for rate limiting.
    */
   async function runMessageReceived(
     event: PluginHookMessageReceivedEvent,
     ctx: PluginHookMessageContext,
-  ): Promise<void> {
-    return runVoidHook("message_received", event, ctx);
+  ): Promise<PluginHookMessageReceivedResult | undefined> {
+    return runModifyingHook<"message_received", PluginHookMessageReceivedResult>(
+      "message_received",
+      event,
+      ctx,
+      (acc, next) => ({
+        cancel: next?.cancel ?? acc?.cancel,
+        reply: next?.reply ?? acc?.reply,
+      }),
+    );
   }
 
   /**
